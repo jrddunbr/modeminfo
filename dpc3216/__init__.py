@@ -15,6 +15,8 @@ class dpc3216:
         self.lang = {}
         self.modemInfo = {}
         self.docsisInfo = {}
+        self.rx = {}
+        self.tx = {}
         self.lang["venabled"] = "Enabled"
         print("Cisco DPC3216 Parsing Library Initialized")
 
@@ -102,6 +104,40 @@ class dpc3216:
                         self.modemInfo[name] = val
                     if tableName == "Docsis Information":
                         self.docsisInfo[name] = val
+                #print ("x: {} line: {}".format(x, tableLines[x]))
+        elif tableName == "Downstream Channel Information" or tableName == "Upstream Channel Information":
+            channel = -1
+            name = ""
+            pwr = ""
+            snr = ""
+            for x in range(0, len(tableLines)):
+                #print()
+                if "td id=\"channel_" in tableLines[x] or "td id=\"up_channel_" in tableLines[x]:
+                    #print(tableLines[x].strip())
+                    channelLoc = tableLines[x].find("channel_") + len("channel_")
+                    channel = int(tableLines[x][channelLoc:channelLoc+2].strip().replace("\"",""))
+                    #print("Channel: {}".format(channel))
+                    name = "Channel {}".format(channel)
+
+                if "td headers=\"channel_" in tableLines[x] or "td headers=\"up_channel_" in tableLines[x]:
+                    #print(tableLines[x].strip())
+                    val = ""
+
+                    start = tableLines[x].find("nowrap>") + len("nowrap>")
+                    end = tableLines[x].find(" <script")
+                    val = tableLines[x][start:end]
+
+                    if "ch_pwr" in tableLines[x] or "up_pwr" in tableLines[x]:
+                        pwr = val
+                    if "ch_snr" in tableLines[x]:
+                        snr = val
+
+                    if tableName == "Downstream Channel Information":
+                        if "ch_snr" in tableLines[x]:
+                            self.rx[name] = (pwr, snr)
+                    if tableName == "Upstream Channel Information":
+                        if "up_pwr" in tableLines[x]:
+                            self.tx[name] = pwr
                 #print ("x: {} line: {}".format(x, tableLines[x]))
         else:
             for x in range(0, len(tableLines)):
