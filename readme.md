@@ -4,6 +4,20 @@ This is a project because why not.
 
 It parses the status webpage from a Cisco DPC3216 on the local network (accessible from http://192.168.100.1) and reads everything in.
 
+## operation
+
+### Typical Printout
+
+On Linux:
+
+```/usr/bin/python3 main.py```
+
+### CSV Output
+
+If you run `collect.sh` in bash, it will collect the data and put it into a CSV titled `collect.csv`
+
+This uses the `collect.py` file, which outputs a set of headers, and then data in a compliant CSV format. `collect.py` takes one optional argument - the delay between collection
+
 ## Other Information
 
 Parsing only requires (as it appears) the `Docsis_system.asp` and the `lang.js` files.
