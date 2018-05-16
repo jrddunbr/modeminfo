@@ -1,0 +1,40 @@
+Modem Information:
+	Model: Cisco DPC3216
+	Vendor: Cisco
+	Hardware Revision: [redacted]
+	MAC Address: [redacted]
+	Bootloader Revision: [redacted]
+	Current Software Revision: [redacted]
+	Firmware Name: [redacted]
+	Firmware Build Time: [redacted]
+	Cable Modem Status: Operational
+Docsis Information:
+	DOCSIS Downstream Scanning: Completed
+	DOCSIS Ranging: Completed
+	DOCSIS DHCP: Completed
+	DOCSIS TFTP: Completed
+	DOCSIS Data Reg Complete: Completed
+	DOCSIS Privacy: Enabled
+RX Information:
+	Channel 1: Power:  -9.6dBmV	Signal To Noise Ratio: 34.3dB
+	Channel 2: Power:  -9.8dBmV	Signal To Noise Ratio: 34.1dB
+	Channel 3: Power:  -10.1dBmV	Signal To Noise Ratio: 33.9dB
+	Channel 4: Power:  -9.9dBmV	Signal To Noise Ratio: 34.1dB
+	Channel 5: Power:  -9.8dBmV	Signal To Noise Ratio: 34.1dB
+	Channel 6: Power:  -10.1dBmV	Signal To Noise Ratio: 33.9dB
+	Channel 7: Power:  -10.5dBmV	Signal To Noise Ratio: 33.1dB
+	Channel 8: Power:  -10.3dBmV	Signal To Noise Ratio: 33.8dB
+	Channel 9: Power:  -10.2dBmV	Signal To Noise Ratio: 33.9dB
+	Channel 10: Power:  -10.3dBmV	Signal To Noise Ratio: 33.8dB
+	Channel 11: Power:  -10.7dBmV	Signal To Noise Ratio: 33.5dB
+	Channel 12: Power:  -10.6dBmV	Signal To Noise Ratio: 33.5dB
+	Channel 13: Power:  -10.7dBmV	Signal To Noise Ratio: 33.0dB
+	Channel 14: Power:  -10.5dBmV	Signal To Noise Ratio: 33.8dB
+	Channel 15: Power:  -10.6dBmV	Signal To Noise Ratio: 33.7dB
+	Channel 16: Power:  -10.5dBmV	Signal To Noise Ratio: 33.9dB
+TX Information:
+	Channel 1: Power: 41.8dBmV
+	Channel 2: Power: 40.0dBmV
+	Channel 3: Power: 41.3dBmV
+	Channel 4: Power: 41.8dBmV
+
