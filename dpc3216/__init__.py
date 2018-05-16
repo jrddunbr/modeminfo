@@ -18,7 +18,7 @@ class dpc3216:
         self.rx = {}
         self.tx = {}
         self.lang["venabled"] = "Enabled"
-        print("Cisco DPC3216 Parsing Library Initialized")
+        #print("Cisco DPC3216 Parsing Library Initialized")
 
 
     def getPageData(self):
