@@ -7,7 +7,7 @@ DEFAULT_IP = "192.168.100.1"
 
 STATUS_PAGE = "/cgi-bin/status_cgi"
 VERSION_PAGE = "/cgi-bin/vers_cgi"
-EVENT_LOG_PAGE = "/cgi-bin/vers_cgi"
+EVENT_LOG_PAGE = "/cgi-bin/event_cgi"
 MODEM_STATE_PAGE = "/cgi-bin/cm_state_cgi"
 
 class tm822g:
@@ -22,6 +22,7 @@ class tm822g:
         self.info = {}
         self.docsis = {}
         self.interfaces = {}
+        self.log = {}
         print("Arris TM822G Parsing Library Initialized")
 
     def getPages(self):
@@ -47,7 +48,7 @@ class tm822g:
                     elif page == EVENT_LOG_PAGE:
                         self.eventLogPageData = pageData
                     elif page == MODEM_STATE_PAGE:
-                        self.eventLogPageData = pageData
+                        self.modemStatePageData = pageData
                     else:
                         print("Uhhh.. We're not sure what to do with `{}`'s' data.".format(page))
             except Exception as e:
@@ -56,7 +57,7 @@ class tm822g:
         print("Done Fetching Pages")
         return good
 
-    def tableParser(self, table):
+    def tableLabelParser(self, table):
         data = self.basicTableParser(table)
         if len(data) == 0:
             return ([], [])
@@ -97,7 +98,7 @@ class tm822g:
 
     def parseDownstreamTable(self, downstreamData):
         table = downstreamData.split("\n",1)[1]
-        labels, data = self.tableParser(table)
+        labels, data = self.tableLabelParser(table)
         labels[0] = "Channel"
         #print(labels)
         for row in data:
@@ -127,7 +128,7 @@ class tm822g:
 
     def parseUpstreamTable(self, upstreamData):
         table = upstreamData.split("\n",1)[1]
-        labels, data = self.tableParser(table)
+        labels, data = self.tableLabelParser(table)
         labels[0] = "Channel"
         #print(labels)
         for row in data:
@@ -240,7 +241,24 @@ class tm822g:
         self.info["fw_name"] = fw_name
         self.info["build_time"] = bt
 
+    def parseEventLogPageData(self):
+        data = self.eventLogPageData
+
+        headerVerb = "DOCSIS(CM) Events"
+        tableStartVerb = "<table"
+        tableEndVerb = "</table>"
+
+        header = data.find(headerVerb)
+        tableStart = data.find(tableStartVerb, header)
+        tableEnd = data.find(tableEndVerb, tableStart)
+        logTable = data[tableStart:tableEnd]
+        labels, logTableData = self.tableLabelParser(logTable)
+
+        self.log["labels"] = [l.replace("<b>","").replace("</b>","") for l in labels]
+        self.log["log"] = logTableData
+
     def parse(self):
         self.parseStatusPageData()
         self.parseVersionPageData()
+        self.parseEventLogPageData()
         print("Done Parsing")
