@@ -17,12 +17,13 @@ class tm822g:
         self.eventLogPageData = eventLogPageData
         self.modemStatePageData = modemStatePageData
         self.STATIC = self.statusPageData != ""
-        self.rx = {}
-        self.tx = {}
-        self.info = {}
-        self.docsis = {}
-        self.interfaces = {}
-        self.log = {}
+        self.rx = {} # cable RX info
+        self.tx = {} # cable TX info
+        self.info = {} # modem info
+        self.docsis = {} # docsis info (for data, docsis)
+        self.tel = {} # docsis info (for tel)
+        self.interfaces = {} # info about interfaces
+        self.log = {} # the logs
         print("Arris TM822G Parsing Library Initialized")
 
     def getPages(self):
@@ -57,7 +58,7 @@ class tm822g:
         print("Done Fetching Pages")
         return good
 
-    def tableLabelParser(self, table):
+    def labelTableParser(self, table):
         data = self.basicTableParser(table)
         if len(data) == 0:
             return ([], [])
@@ -98,7 +99,7 @@ class tm822g:
 
     def parseDownstreamTable(self, downstreamData):
         table = downstreamData.split("\n",1)[1]
-        labels, data = self.tableLabelParser(table)
+        labels, data = self.labelTableParser(table)
         labels[0] = "Channel"
         #print(labels)
         for row in data:
@@ -128,7 +129,7 @@ class tm822g:
 
     def parseUpstreamTable(self, upstreamData):
         table = upstreamData.split("\n",1)[1]
-        labels, data = self.tableLabelParser(table)
+        labels, data = self.labelTableParser(table)
         labels[0] = "Channel"
         #print(labels)
         for row in data:
@@ -252,13 +253,90 @@ class tm822g:
         tableStart = data.find(tableStartVerb, header)
         tableEnd = data.find(tableEndVerb, tableStart)
         logTable = data[tableStart:tableEnd]
-        labels, logTableData = self.tableLabelParser(logTable)
+        labels, logTableData = self.labelTableParser(logTable)
 
         self.log["labels"] = [l.replace("<b>","").replace("</b>","") for l in labels]
         self.log["log"] = logTableData
+
+    def parseModemStatePageData(self):
+        data = self.modemStatePageData
+
+        headerVerb = "INSERT ARRIS PAGE CONTENT HERE"
+        tableStartVerb = "<table"
+        tableEndVerb = "</table>"
+
+        header = data.find(headerVerb)
+        tableStart = data.find(tableStartVerb, header)
+        tableEnd = data.find(tableEndVerb, tableStart)
+        stateTable = data[tableStart:tableEnd]
+        docsisData = self.basicTableParser(stateTable)
+
+        docsis_d_scan = docsisData[0][1]
+        docsis_d_range = docsisData[1][1]
+        docsis_u_range = docsisData[2][1]
+        docsis_dhcp = docsisData[3][1]
+        docsis_tftp = docsisData[4][1]
+        docsis_reg = docsisData[5][1]
+
+        self.docsis["down_scan"] = docsis_d_scan
+        self.docsis["down_ranging"] = docsis_d_range
+        self.docsis["up_ranging"] = docsis_u_range
+        self.docsis["dhcp"] = docsis_dhcp
+        self.docsis["tftp"] = docsis_tftp
+        self.docsis["reg"] = docsis_reg
+
+        tel_dhcp = docsisData[6][1]
+        tel_tftp = docsisData[7][1]
+        tel_reg_cs = docsisData[8][1]
+        tel_reg = docsisData[9][1]
+
+        self.tel["dhcp"] = tel_dhcp
+        self.tel["tftp"] = tel_tftp
+        self.tel["reg_callservice"] = tel_reg_cs
+        self.tel["reg"] = tel_reg
+
+        headerVerb = "TOD State:"
+
+        header = data.find(headerVerb, tableEnd)
+        tableStart = data.find(tableStartVerb, header)
+        tableEnd = data.find(tableEndVerb, tableStart)
+        todTable = data[tableStart:tableEnd]
+        todData = self.basicTableParser(todTable)
+
+        tod_state = todData[0][1]
+
+        self.info["tod_state"] = tod_state
+
+        headerVerb = "BPI State:"
+
+        header = data.find(headerVerb, tableEnd)
+        tableStart = data.find(tableStartVerb, header)
+        tableEnd = data.find(tableEndVerb, tableStart)
+        bpiTable = data[tableStart:tableEnd]
+        bpiData = self.basicTableParser(bpiTable)
+
+        bpi_state = bpiData[0][1]
+
+        if "--" not in bpi_state:
+            self.docsis["bpi"] = bpi_state
+
+        headerVerb = "DHCP Attempts"
+
+        header = data.find(headerVerb, tableEnd)
+        tableStart = data.find(tableStartVerb, header)
+        tableEnd = data.find(tableEndVerb, tableStart)
+        dhcpTable = data[tableStart:tableEnd]
+        dhcpData = self.basicTableParser(dhcpTable)
+
+        ipv4_attempts = dhcpData[0][1]
+        ipv6_attempts = dhcpData[1][1]
+
+        self.info["ipv4_attempts"] = ipv4_attempts
+        self.info["ipv6_attempts"] = ipv6_attempts
 
     def parse(self):
         self.parseStatusPageData()
         self.parseVersionPageData()
         self.parseEventLogPageData()
+        self.parseModemStatePageData()
         print("Done Parsing")
