@@ -26,6 +26,8 @@ for data in modem.rx:
     print(data)
     print(modem.rx[data])
 
-for data  in modem.tx:
+for data in modem.tx:
     print(data)
     print(modem.tx[data])
+
+print("Uptime: {}".format(modem.info["uptime"]))

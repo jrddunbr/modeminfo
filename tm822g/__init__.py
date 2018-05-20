@@ -19,9 +19,9 @@ class tm822g:
         self.STATIC = self.statusPageData != ""
         self.rx = {}
         self.tx = {}
-        self.modemInfo = {}
-        self.docsisInfo = {}
-        self.lan = {}
+        self.info = {}
+        self.docsis = {}
+        self.interfaces = {}
         print("Arris TM822G Parsing Library Initialized")
 
     def getPages(self):
@@ -30,6 +30,7 @@ class tm822g:
         self.eventLogPageData = ""
         self.modemStatePageData = ""
         PAGE_LIST = [STATUS_PAGE, VERSION_PAGE, EVENT_LOG_PAGE, MODEM_STATE_PAGE]
+        print("Starting Fetching Pages")
         for page in PAGE_LIST:
             try:
                 response = urllib.request.urlopen("http://{}/{}".format(DEFAULT_IP, page))
@@ -49,7 +50,7 @@ class tm822g:
                         print("Uhhh.. We're not sure what to do with `{}`'s' data.".format(page))
             except Exception as e:
                 print("Error fetching file: {}".format(e))
-        print("Finished fetching pages")
+        print("Done Fetching Pages")
 
     def tableParser(self, table):
         #print(table)
@@ -130,7 +131,7 @@ class tm822g:
             if "--" not in row[5]:
                 self.tx[channel]["symbol_rate"] = str(row[5])
             if "--" not in row[6]:
-                self.tx[channel]["modulation"] = str(row[6])
+                self.tx[channel]["modulation"] = str(row[6].split("\n")[0])
             self.tx[channel]["missing"] = missing
 
     def parseStatusPageData(self):
@@ -154,6 +155,19 @@ class tm822g:
             upstreamData = data[ustart:uend]
             #print(upstreamData)
             self.parseUpstreamTable(upstreamData)
+        startVerb = "System Uptime:"
+        endVerb = "</td>"
+        sustart = data.find(startVerb, uend)
+        sumid = data.find(endVerb, sustart) + len(endVerb)
+        suend = data.find(endVerb, sumid)
+        if sustart !=0 and suend != 0:
+            #print("Start: {} End: {}".format(sustart, suend))
+            #print(data[sumid:suend])
+            uptime = data[sumid:suend].replace("<td>", "").strip()
+            #print(uptime)
+            self.info["uptime"] = uptime
+
 
     def parse(self):
         self.parseStatusPageData()
+        print("Done Parsing")
