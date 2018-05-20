@@ -25,6 +25,7 @@ class tm822g:
         print("Arris TM822G Parsing Library Initialized")
 
     def getPages(self):
+        good = True
         self.statusPageData = ""
         self.versionPageData = ""
         self.eventLogPageData = ""
@@ -37,6 +38,7 @@ class tm822g:
                 pageData = response.read().decode("utf-8")
                 if response.status != 200:
                     print("There was a problem with fetching {}".format(page))
+                    good = False
                 else:
                     if page == STATUS_PAGE:
                         self.statusPageData = pageData
@@ -50,7 +52,9 @@ class tm822g:
                         print("Uhhh.. We're not sure what to do with `{}`'s' data.".format(page))
             except Exception as e:
                 print("Error fetching file: {}".format(e))
+                good = False
         print("Done Fetching Pages")
+        return good
 
     def tableParser(self, table):
         #print(table)
