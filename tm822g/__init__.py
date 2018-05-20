@@ -57,37 +57,49 @@ class tm822g:
         return good
 
     def tableParser(self, table):
-        #print(table)
-        rows = table.count("<tr>") - 1
-        labels = []
-        data = []
-        if rows <= -1:
+        data = self.basicTableParser(table)
+        if len(data) == 0:
             return ([], [])
-        # if we're this far, there's at least a row of table labels
-        labelStart = table.find("<tr>") + len("<tr>")
-        labelEnd = table.find("</tr>", labelStart)
-        rowData = table[labelStart:labelEnd].replace("\r", "").split("<td>")
-        [labels.append(r.replace("</td>", "").strip()) for r in rowData if "</td>" in r]
-        #print(labels)
+        # If we get this far, we have a table with at least 1 row (which is a label at least)
+        if len(data) == 1:
+            return (data, [])
+        # if we get this far, we totally have some rows
+        labels = data.pop(0)
+        return (labels, data)
+
+    def basicTableParser(self, table):
+        rows = table.count("<tr")
         if rows == 0:
-            return labels
-        # if we're this far, we have some rows to work with
-        rest = table[labelEnd + len("</tr>"):]
+            return []
+        # now, if we're this far, we have rows
+        data = []
         lastRowEnd = 0
         for row in range(0, rows):
-            #print("row: {}".format(row))
-            rowStart = rest.find("<tr>", lastRowEnd) + len("<tr>")
-            rowEnd = rest.find("</tr>", rowStart)
+            #print(row)
+            trStart = table.find("<tr", lastRowEnd) + len("<tr")
+            rowStart = table.find(">", trStart) + len(">")
+            rowEnd = table.find("</tr>", rowStart) - len("</tr>")
             lastRowEnd = rowEnd
-            rowData = rest[rowStart:rowEnd].replace("\r", "").split("<td>")
-            cleanData = [r.replace("</td>", "").strip() for r in rowData if "</td>" in r]
+            rowData = table[rowStart:rowEnd]
+            datums = rowData.count("<td")
+            lastDatumEnd = rowStart
+            cleanData = []
+            for datum in range(0, datums):
+                tdStart = table.find("<td", lastDatumEnd) + len("<td")
+                datumStart = table.find(">", tdStart) + len(">")
+                datumEnd = table.find("</td>", datumStart)
+                lastDatumEnd = datumEnd
+                datumData = table[datumStart:datumEnd]
+                #print(datumData.strip())
+                cleanData.append(datumData.strip())
             data.append(cleanData)
-        return (labels, data)
+        return data
 
     def parseDownstreamTable(self, downstreamData):
         table = downstreamData.split("\n",1)[1]
         labels, data = self.tableParser(table)
         labels[0] = "Channel"
+        #print(labels)
         for row in data:
             channel = "Channel " + row[0].replace("Downstream", "").strip()
             missing = False
@@ -117,6 +129,7 @@ class tm822g:
         table = upstreamData.split("\n",1)[1]
         labels, data = self.tableParser(table)
         labels[0] = "Channel"
+        #print(labels)
         for row in data:
             channel = "Channel " + row[0].replace("Upstream", "").strip()
             missing = False
@@ -171,7 +184,63 @@ class tm822g:
             #print(uptime)
             self.info["uptime"] = uptime
 
+    def parseVersionPageData(self):
+        data = self.versionPageData
+        headerVerb = "INSERT ARRIS PAGE CONTENT HERE"
+        tableVerb = "<table"
+        closeTableVerb = "</table>"
+        iapch = data.find(headerVerb)
+        uselessTable = data.find(tableVerb, iapch) + len(tableVerb)
+        systemTableStart = data.find(tableVerb, uselessTable)
+        systemTableEnd = data.find(closeTableVerb, systemTableStart)
+        systemTable = data[systemTableStart:systemTableEnd]
+        systemTableData = self.basicTableParser(systemTable)
+        systemSplitData = systemTableData[1][1].split("<br>")
+
+        systemString = systemSplitData[0].strip()
+        hw_rev = systemSplitData[1].split(":",1)[1].strip()
+        vendor = systemSplitData[2].split(":",1)[1].strip()
+        bootloader = systemSplitData[3].split(":",1)[1].strip()
+        software = systemSplitData[4].split(":",1)[1].strip()
+        model = systemSplitData[5].split(":",1)[1].strip()
+        serial = systemTableData[7][1]
+        battery_fw = systemTableData[8][1]
+
+        self.info["system_name"] = systemString
+        self.info["hw_rev"] = hw_rev
+        self.info["vendor"] = vendor
+        self.info["boot_rev"] = bootloader
+        self.info["sw_rev"] = software
+        self.info["model"] = model
+        self.info["serial"] = serial
+        self.info["batt_fw"] = battery_fw
+
+        rest = data[systemTableEnd:]
+
+        startVerb = "Firmware Name:"
+        midVerb = "<td"
+        endVerb = "</td></tr>"
+
+        fwNamePre = rest.find(startVerb) + len(startVerb)
+        fwNameMid = rest.find(midVerb, fwNamePre) + len(midVerb)
+        fwNameStart = rest.find(">", fwNameMid) + 1
+        fwNameEnd = rest.find(endVerb, fwNameStart)
+
+        fw_name = rest[fwNameStart:fwNameEnd]
+
+        startVerb = "Firmware Build Time:"
+
+        btPre = rest.find(startVerb) + len(startVerb)
+        btMid = rest.find(midVerb, btPre) + len(midVerb)
+        btStart = rest.find(">", btMid) + 1
+        btEnd = rest.find(endVerb, btStart)
+
+        bt = rest[btStart:btEnd]
+
+        self.info["fw_name"] = fw_name
+        self.info["build_time"] = bt
 
     def parse(self):
         self.parseStatusPageData()
+        self.parseVersionPageData()
         print("Done Parsing")
