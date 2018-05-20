@@ -24,7 +24,7 @@ class tm822g:
         self.tel = {} # docsis info (for tel)
         self.interfaces = {} # info about interfaces
         self.log = {} # the logs
-        print("Arris TM822G Parsing Library Initialized")
+        #print("Arris TM822G Parsing Library Initialized")
 
     def getPages(self):
         good = True
@@ -33,7 +33,6 @@ class tm822g:
         self.eventLogPageData = ""
         self.modemStatePageData = ""
         PAGE_LIST = [STATUS_PAGE, VERSION_PAGE, EVENT_LOG_PAGE, MODEM_STATE_PAGE]
-        print("Starting Fetching Pages")
         for page in PAGE_LIST:
             try:
                 response = urllib.request.urlopen("http://{}/{}".format(DEFAULT_IP, page))
@@ -55,7 +54,6 @@ class tm822g:
             except Exception as e:
                 print("Error fetching file: {}".format(e))
                 good = False
-        print("Done Fetching Pages")
         return good
 
     def labelTableParser(self, table):
@@ -339,4 +337,3 @@ class tm822g:
         self.parseVersionPageData()
         self.parseEventLogPageData()
         self.parseModemStatePageData()
-        print("Done Parsing")

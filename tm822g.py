@@ -23,6 +23,11 @@ if modem.getPages():
         print("{}: {}".format(data, modem.docsis[data]))
 
     print()
+    print("Telephone Info:")
+    for data in modem.tel:
+        print("{}: {}".format(data, modem.tel[data]))
+
+    print()
     print("Modem RX Info:")
     for data in modem.rx:
         print(data)
